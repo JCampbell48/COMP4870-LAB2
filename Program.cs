@@ -1,26 +1,57 @@
+using Microsoft.SemanticKernel;
+using System.Text;
+using Microsoft.SemanticKernel.ChatCompletion;
+using OpenAI;
+using System.ClientModel;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using lab02b.Pages;
+using lab02b.Services;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorPages();
+
+var config = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .Build();
+
+var modelId = config["AI:Model"]!;
+var uri = config["AI:Endpoint"]!;
+var githubPAT = config["AI:PAT"]!;
+
+var client = new OpenAIClient(new ApiKeyCredential(githubPAT), new OpenAIClientOptions { Endpoint = new Uri(uri) });
+
+
+var kernelBuilder = Kernel.CreateBuilder();
+kernelBuilder.AddOpenAIChatCompletion(modelId, client);
+var kernel = kernelBuilder.Build();
+
+
+builder.Services.AddSingleton(kernel);
+builder.Services.AddSingleton<IChatCompletionService>(kernel.GetRequiredService<IChatCompletionService>());
+
+builder.Services.AddSingleton<lab02b.Services.AIService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapStaticAssets();
-app.MapRazorPages()
-   .WithStaticAssets();
+app.MapRazorPages();
 
 app.Run();

@@ -1,0 +1,22 @@
+﻿@page
+@model lab02.Pages.ChatBotModel
+@{
+    ViewData["Title"] = "Chat Bot";   
+}
+
+<h1>@ViewData["Title"]</h1> 
+
+<h3>Ask the ChatBot</h3>
+
+
+<form method="post">
+    <label for="UserMessage">Enter your question:</label>
+    <input type="text" id="UserMessage" name="UserMessage" value="@Model.UserMessage" />
+    <button type="submit">Submit</button>
+</form>
+
+
+@if (!string.IsNullOrEmpty(Model.AIResponse))
+{
+    <p><strong>AI Response:</strong> @Model.AIResponse</p>
+}
